@@ -76,7 +76,7 @@ const Login: React.FC = () => {
               onPress={handlePress(handleSubmit)}
               disabled={!isValid || isSubmitting}
             >
-              <Text className="text-white text-lg text-center">Se connecter</Text>
+              <Text className="text-white text-lg text-center font-mont font-bold">SE CONNECTER</Text>
             </TouchableOpacity>
         </View>
 
