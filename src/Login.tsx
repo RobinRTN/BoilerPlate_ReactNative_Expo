@@ -1,9 +1,7 @@
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, GestureResponderEvent } from "react-native";
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, GestureResponderEvent, Image } from "react-native";
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import AppNavigator from "./AppNavigator";
-
 
 
 const SignUpSchema = Yup.object().shape({
@@ -30,9 +28,14 @@ const handleLogin = () => {
 
 }
 
+interface LoginInterface {
+  setIsSignUp: React.Dispatch<React.SetStateAction<boolean>>;
+
+}
+
+const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
 
 
-const Login: React.FC = () => {
   return (
     <SafeAreaView className="pt-5 flex-1 justify-normal">
       <Formik
@@ -43,6 +46,13 @@ const Login: React.FC = () => {
       >
         {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, isValid}) => (
           <View>
+            <View className="items-center mt-10">
+              <Image
+                source={require('../assets/splash.png')}
+                className="w-24 h-24 rounded-full"
+                resizeMode="cover"
+              />
+            </View>
             <Text className="text-center text-xl text-pure-white mb-10 mt-10 bold">Bienvenue</Text>
             <TextInput
               className="p-2 rounded bg-light-navy text-pure-white mb-2 text-lg mx-2"
@@ -76,7 +86,7 @@ const Login: React.FC = () => {
               onPress={handlePress(handleSubmit)}
               disabled={!isValid || isSubmitting}
             >
-              <Text className="text-white text-lg text-center font-mont font-bold">SE CONNECTER</Text>
+              <Text className="text-white text-lg text-center">Se connecter</Text>
             </TouchableOpacity>
         </View>
 
@@ -86,7 +96,8 @@ const Login: React.FC = () => {
         }
 
       </Formik>
-      {/* <Text className="text-center text-pure-white">S'inscire</Text> */}
+      <Text className="text-center text-classic-purple mt-5" onPress={() => setIsSignUp(prev => !prev)}>Pas encore de compte ? S'inscrire</Text>
+
     </SafeAreaView>
   )
 }

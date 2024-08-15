@@ -27,13 +27,6 @@ module.exports = {
         'black-alternative-light': '#1d2262',
         'black-alternative-lighter': '#40488F',
       },
-      fontFamily: {
-        'mont': ['Montserrat', 'sans-serif'], // Montserrat 700 weight (bold)
-        'opens': ['Open Sans', 'sans-serif'], // Open Sans sans-serif
-      },
-      // fontWeight: {
-      //   'mont': 700, // Force Montserrat to always be 700
-      // },
     },
   },
   plugins: [],
