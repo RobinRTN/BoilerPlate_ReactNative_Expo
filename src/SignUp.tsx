@@ -1,13 +1,9 @@
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Platform, KeyboardAvoidingView, GestureResponderEvent, Image, Modal, Animated, Dimensions, PanResponder } from "react-native";
-import { Formik, Form, Field, ErrorMessage, FormikHelpers  } from 'formik';
+import { Formik, FormikHelpers  } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import AppNavigator from "./AppNavigator";
-import { useNavigation } from "@react-navigation/native";
-import { useState, useRef } from "react";
-import SlidingModalForget from "./SlidingModalForget";
-
-
+import { useState } from "react";
+import SlidingModalSuccess from "./SlidingModalSuccess";
 
 
 const SignUpSchema = Yup.object().shape({
@@ -41,15 +37,10 @@ interface LoginInterface {
 
 const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
 
-  const navigation = useNavigation();
-  const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
+  const [modalVisibleSuccess, setModalVisibleSuccess] = useState<boolean>(false);
+  const closeModalSuccess = () => setModalVisibleSuccess(false);
 
-  const closeModal = () => setModalVisible(false);
-  const openModal = () => setModalVisible(true);
-
-
-  const handleLogin = async (values: SignUpFormValues, { setSubmitting, resetForm }: FormikHelpers<SignUpFormValues>) => {
+  const handleSignUp = async (values: SignUpFormValues, { setSubmitting, resetForm }: FormikHelpers<SignUpFormValues>) => {
     try {
       const baseURL: string | undefined = "http://localhost:3001";
       if (!baseURL) {
@@ -68,7 +59,7 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
       });
 
       if (response.status === 200) {
-        navigation.navigate('Login' as never);
+        setModalVisibleSuccess(true);
       }
       resetForm();
     } catch (error: any) {
@@ -90,11 +81,11 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
             initialValues={{ email: '', password: '', confirmPassword: '' }}
             validationSchema={SignUpSchema}
             validateOnMount
-            onSubmit={handleLogin}
+            onSubmit={handleSignUp}
           >
             {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, isValid }) => (
               <View>
-                <View className="items-center mt-6">
+                <View className="items-center mt-2">
                   <Image
                     source={require('../assets/splash.png')}
                     className="w-24 h-24 rounded-full"
@@ -154,16 +145,14 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
                 >
                   <Text className="text-white text-lg text-center">S'inscrire</Text>
                 </TouchableOpacity>
-                <Text style={{ textAlign: 'center', color: '#A32CC4', marginTop: 10 }} onPress={openModal}>
-                  Open Sliding Modal
-                </Text>
+
               </View>
             )}
           </Formik>
           <Text className="text-center text-classic-purple mt-5" onPress={() => setIsSignUp(prev => !prev)}>Déjà un compte ? Se connecter</Text>
         </View>
       </SafeAreaView>
-      <SlidingModalForget visible={modalVisible} onClose={closeModal} />
+      <SlidingModalSuccess visible ={modalVisibleSuccess} onClose={closeModalSuccess} setIsSignUp={setIsSignUp} />
     </KeyboardAvoidingView>
   )
 }

@@ -1,7 +1,13 @@
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, GestureResponderEvent, Image, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
-import { Formik } from 'formik';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, GestureResponderEvent, Image, KeyboardAvoidingView, ScrollView, Platform, Dimensions, Animated } from "react-native";
+import { Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
+import SlidingModalForget from "./SlidingModalForget";
+import SlidingModalConfirm from "./SlidingModalConfirm";
+import { useRef, useState } from "react";
+import { useDispatch } from "react-redux";
+import { setAuthState } from "./features/authSlice";
+
 
 
 const SignUpSchema = Yup.object().shape({
@@ -12,10 +18,6 @@ const SignUpSchema = Yup.object().shape({
   password: Yup.string()
     .required('Champ requis')
     .min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
-  // confirmPassword: Yup.string()
-  //   .nullable()
-  //   .oneOf([Yup.ref('password'), null], 'Les mots de passe doivent correspondre')
-  //   .required('Champ requis'),
 });
 
 const handlePress = (handleSubmit: () => void) => (event: GestureResponderEvent) => {
@@ -23,9 +25,9 @@ const handlePress = (handleSubmit: () => void) => (event: GestureResponderEvent)
   handleSubmit();
 };
 
-
-const handleLogin = () => {
-
+interface SignInFormValues {
+  email: string;
+  password: string;
 }
 
 interface LoginInterface {
@@ -34,6 +36,63 @@ interface LoginInterface {
 }
 
 const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
+
+  const [modalVisibleForget, setModalVisibleForget] = useState<boolean>(false);
+  const [modalVisibleConfirm, setModalVisibleConfirm] = useState<boolean>(false);
+
+  const closeModalForget = () => setModalVisibleForget(false);
+  const openModalForget = () => setModalVisibleForget(true);
+
+  const closeModalConfirm = () => setModalVisibleConfirm(false);
+  const openModalConfirm = () => setModalVisibleConfirm(true);
+
+  const handleResponse = async (response: any) => {
+    const dispatch = useDispatch();
+
+    const authHeader = response.headers.authorization;
+    let token = null;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7);
+    }
+
+    const { id, email, username, picture_number } = response.data.status.data.user;
+
+    dispatch(setAuthState({
+      accessToken: token,
+      userId: id,
+      userEmail: email,
+      username: username,
+      userPicture: picture_number
+    }));
+  }
+
+  const handleLogin = async (values: SignInFormValues, { setSubmitting, resetForm }: FormikHelpers<SignInFormValues>) => {
+    try {
+      const baseURL: string | undefined = "http://localhost:3001";
+      if (!baseURL) {
+        throw new Error('No API URL');
+      }
+      const response = await axios.post(`${baseURL}/login`, {
+        user: {
+          email: values.email,
+          password: values.password
+        }
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.status === 200) {
+        handleResponse(response);
+      }
+    } catch (error: any) {
+      console.error('Signup error:', error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -43,7 +102,7 @@ const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
       <SafeAreaView className="flex-1 justify-center">
         <View>
           <Formik
-            initialValues={{email: '', password: '', confirmPassword: ''}}
+            initialValues={{email: '', password: ''}}
             validationSchema={SignUpSchema}
             validateOnMount
             onSubmit={handleLogin}
@@ -97,8 +156,12 @@ const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
             }
           </Formik>
           <Text className="text-center text-classic-purple mt-5" onPress={() => setIsSignUp(prev => !prev)}>Pas encore de compte ? S'inscrire</Text>
+          <Text className="text-center text-darker-purple mt-3" onPress={openModalForget}>Mot de passe oublié ?</Text>
+          <Text className="text-center text-darker-purple mt-2" onPress={openModalConfirm}>Email de confirmation non reçu?</Text>
         </View>
       </SafeAreaView>
+      <SlidingModalForget visible ={modalVisibleForget} onClose={closeModalForget} />
+      <SlidingModalConfirm visible ={modalVisibleConfirm} onClose={closeModalConfirm} />
     </KeyboardAvoidingView>
   )
 }

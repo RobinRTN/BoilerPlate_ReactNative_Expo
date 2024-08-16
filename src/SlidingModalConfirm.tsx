@@ -11,49 +11,15 @@ import {
   KeyboardEvent,
   TouchableOpacity
 } from 'react-native';
-import { Formik, Form, Field, ErrorMessage, FormikHelpers } from 'formik';
-import * as Yup from 'yup';
-import axios from 'axios';
-import { GestureResponderEvent } from 'react-native';
 
-interface ForgetInterface {
+interface ConfirmInterface {
   visible: boolean;
   onClose: () => void;
 }
 
-interface FormValues {
-  email: string;
-}
-
-const SlidingModalForget: React.FC<ForgetInterface> = ({ visible, onClose }) => {
+const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) => {
   const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  const emailFormatRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-  const validationSchema = Yup.object().shape({
-    email: Yup.string()
-    .email('Email invalide')
-    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Format d\'email invalide')
-    .required('Champ requis'),
-  });
-
-  const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
-    const baseURL: string | undefined = "http://localhost:3001";
-    if (!baseURL) {
-      throw new Error('No API URL');
-    }
-    try {
-      const response = await axios.post(`${baseURL}/users/resend_confirmation`, { email: values.email });
-      setSubmitting(false);
-    } catch (error: any) {
-      setSubmitting(false);
-    }
-  };
-
-  const handlePress = (handleSubmit: () => void) => (event: GestureResponderEvent) => {
-    event.preventDefault();
-    handleSubmit();
-  };
 
   const closeModal = () => {
     Animated.timing(slideAnim, {
@@ -170,39 +136,22 @@ const SlidingModalForget: React.FC<ForgetInterface> = ({ visible, onClose }) => 
             }}
           />
         </View>
-        <Text className='text-xl text-center my-2 text-dark-navy'>Réinitialiser mot de passe</Text>
-        <Text className='text-sm text-center my-2 text-dark-navy'>Un email te sera envoyé pour réinitialiser ton mot de passe actuel 📫</Text>
-        <Formik
-              initialValues={{ email: '' }}
-              validationSchema={validationSchema}
-              onSubmit={handleSubmit}
-            >
-              {({ isSubmitting, isValid, dirty }) => (
-                <Form>
-                  <Field type="email" name="email" placeholder="Ton adresse email" className="px-4 py-2 rounded border-dark-navy bg-slate-200 text-lg mx-2" />
-                  <ErrorMessage name="email" component="div" className="error-message" />
-
-                  <TouchableOpacity
-                  className={` px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75  ${isValid ? "bg-darker-purple shadow-2xl" : "bg-black-alternative-lighter shadow"}`}
-                  onPress={handleSubmit}
-                  disabled={!isValid || isSubmitting}
-                >
-                  <Text className="text-white text-lg text-center">S'inscrire</Text>
-                </TouchableOpacity>
-                </Form>
-            )}
-            </Formik>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 }}>Sliding Modal</Text>
+        <Text>This is a sliding modal with drag-to-dismiss!</Text>
         <TextInput
-          placeholder="Ton adresse email"
-          className='px-4 py-2 rounded border-dark-navy bg-slate-200 text-lg mx-2'
+          placeholder="Enter something"
+          style={{
+            height: 40,
+            borderColor: 'gray',
+            borderWidth: 1,
+            borderRadius: 5,
+            marginTop: 20,
+            paddingHorizontal: 10,
+          }}
         />
-        <TouchableOpacity
-          className={`px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75 bg-darker-purple shadow-2xl`} >
-          <Text className="text-white text-lg text-center">Réinitialiser</Text>
-        </TouchableOpacity>
       </Animated.View>
     </Modal>
   );
 };
 
-export default SlidingModalForget;
+export default SlidingModalConfirm;
