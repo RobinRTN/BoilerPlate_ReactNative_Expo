@@ -12,7 +12,7 @@ const useCustomApi = () : AxiosInstance => {
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   const API: AxiosInstance = axios.create({
-    baseURL: process.env.API_URL, // Ensure you're using env variables correctly
+    baseURL: "http://host:3001", // Ensure you're using env variables correctly
     timeout: 8000,
     headers: {
       'Content-Type': 'application/json',
