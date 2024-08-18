@@ -97,6 +97,8 @@ const SlidingModalForget: React.FC<ForgetInterface> = ({ visible, onClose }) => 
       }).start();
     });
 
+
+    
     const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', (event: KeyboardEvent) => {
       setKeyboardHeight(0);
       Animated.timing(slideAnim, {
