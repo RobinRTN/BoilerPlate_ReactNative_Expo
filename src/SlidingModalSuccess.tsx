@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, {BottomSheetTextInput} from "@gorhom/bottom-sheet";
-
+import LottieView from 'lottie-react-native'
+import succes from '../assets/tick.json'
 interface SuccessInterface {
   visible: boolean;
   onClose: () => void;
@@ -18,22 +19,11 @@ interface SuccessInterface {
 }
 
 const SlidingModalSuccess: React.FC<SuccessInterface> = ({ visible, onClose, setIsSignUp }) => {
-  const tickScaleAnim = useRef(new Animated.Value(0)).current;
   const bottomSheetRef = useRef<BottomSheet>(null);
-
-  const playTickAnimation = () => {
-    Animated.timing(tickScaleAnim, {
-      toValue: 1,
-      duration: 500,
-      easing: Easing.out(Easing.exp),
-      useNativeDriver: true,
-    }).start();
-  };
 
   useEffect(() => {
     if (visible) {
       bottomSheetRef.current?.expand();
-      playTickAnimation();
     } else {
       bottomSheetRef.current?.close();
     }
@@ -55,21 +45,11 @@ const SlidingModalSuccess: React.FC<SuccessInterface> = ({ visible, onClose, set
       onClose={onClose}
     >
       <View
-        style={{
-          alignItems: 'center',
-          marginBottom: 30,
-        }}
+        className='items-center mb-4'
       >
-        <Animated.View
-          style={{
-            transform: [{ scale: tickScaleAnim }],
-            opacity: tickScaleAnim,
-          }}
-        >
-          <MaterialIcons name="check-circle" size={64} color="#00A86B" />
-        </Animated.View>
+        <LottieView style={{height: 120, width: 120}} source={succes} autoPlay loop />
       </View>
-      <Text className='text-dark-navy text-center my-2 text-xl'>Inscription réussie !</Text>
+      <Text className='text-dark-navy text-center mb-2 text-xl'>Inscription réussie !</Text>
       <Text className='text-dark-navy text-center text-sm'>Veuillez vérifier votre boîte de réception pour confirmer votre email.</Text>
       <TouchableOpacity
         className='px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75 bg-darker-purple shadow-2xl'

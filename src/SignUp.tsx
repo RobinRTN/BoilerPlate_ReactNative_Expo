@@ -4,6 +4,8 @@ import * as Yup from 'yup';
 import axios from 'axios';
 import { useState } from "react";
 import SlidingModalSuccess from "./SlidingModalSuccess";
+import LottieView from 'lottie-react-native';
+import succes from "../assets/tick.json"
 
 
 const SignUpSchema = Yup.object().shape({
