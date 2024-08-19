@@ -6,7 +6,8 @@ import {
   Text,
   Dimensions,
   TouchableOpacity,
-  Easing
+  Easing,
+  Vibration
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, {BottomSheetTextInput} from "@gorhom/bottom-sheet";
@@ -18,12 +19,16 @@ interface SuccessInterface {
   setIsSignUp: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+const successVibrationPattern = [0, 200, 100, 200];
+
+
 const SlidingModalSuccess: React.FC<SuccessInterface> = ({ visible, onClose, setIsSignUp }) => {
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
     if (visible) {
       bottomSheetRef.current?.expand();
+      Vibration.vibrate(successVibrationPattern);
     } else {
       bottomSheetRef.current?.close();
     }

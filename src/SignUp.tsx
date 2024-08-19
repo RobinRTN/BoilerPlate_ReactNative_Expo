@@ -75,7 +75,7 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0} // Offset for iOS to push content above keyboard
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
       <SafeAreaView className="flex-1 justify-center">
         <View>
@@ -94,7 +94,7 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
                     resizeMode="cover"
                   />
                 </View>
-                <Text className="text-center text-xl text-pure-white mb-10 mt-10 bold">Bienvenue</Text>
+                <Text className="text-center text-xl text-pure-white mb-5 mt-10 bold">Bienvenue</Text>
                 <TextInput
                   className="p-2 rounded bg-light-navy text-pure-white mb-2 text-lg mx-2"
                   placeholder="Email"
@@ -104,10 +104,11 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
                   value={values.email}
                   keyboardType="email-address"
                   textContentType="emailAddress"
+                  autoCapitalize='none'
                 />
                 <View className="h-6">
                   {touched.email && errors.email && (
-                    <Text className="mx-3 text-darker-purple mb-2">{errors.email}</Text>
+                    <Text className="mx-3 text-darker-purple">{errors.email}</Text>
                   )}
                 </View>
                 <TextInput
@@ -119,6 +120,7 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
                   value={values.password}
                   secureTextEntry
                   textContentType="newPassword"
+                  autoCapitalize='none'
                 />
                 <View className="h-6">
                   {touched.password && errors.password && (
@@ -141,13 +143,12 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
                   )}
                 </View>
                 <TouchableOpacity
-                  className={` px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75  ${isValid ? "bg-darker-purple shadow-2xl" : "bg-black-alternative-lighter shadow"}`}
+                  className={`px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75  ${isValid ? "bg-darker-purple shadow-2xl" : "bg-black-alternative-lighter shadow"}`}
                   onPress={handlePress(handleSubmit)}
                   disabled={!isValid || isSubmitting}
                 >
-                  <Text className="text-white text-lg text-center">S'inscrire</Text>
+                  <Text className="text-white text-lg text-center">{isSubmitting ? "Envoi..." : "S'inscrire"}</Text>
                 </TouchableOpacity>
-
               </View>
             )}
           </Formik>

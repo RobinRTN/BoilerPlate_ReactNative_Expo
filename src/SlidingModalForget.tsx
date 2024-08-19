@@ -1,6 +1,6 @@
 import BottomSheet, {BottomSheetTextInput} from "@gorhom/bottom-sheet";
 import { useRef, useMemo, useCallback } from "react";
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ViewComponent } from 'react-native';
+import { View, Text, Vibration, TouchableOpacity, KeyboardAvoidingView, Platform, ViewComponent } from 'react-native';
 import { Formik, Field, ErrorMessage, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import axios from "axios";
@@ -14,12 +14,30 @@ interface ConfirmInterface {
   onClose: () => void;
 }
 
+const successVibrationPattern = [0, 200, 100, 200];
+const failureVibrationPattern = [0, 500];
+
+const getErrorMessage = (errorCode: string): string => {
+  const errors: Record<string, string> = {
+    "invalid_email": "Adresse email invalide",
+    "required": "Email requis",
+    "email_already_confirmed": "Adresse email déjà validée, vous pouvez vous connecter.",
+    "user_not_found": "Aucun utilisateur trouvé avec cet email.",
+    "generic": "Erreur lors de la demande."
+  };
+
+  return errors[errorCode] || errors["generic"];
+};
+
+
 const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) => {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['40%', '50%'], []);
   const [beenSubmit, setBeenSubmit] = useState<boolean>(false);
   const [submitSucces, setSubmitSucces] = useState<boolean>(false);
+  const [errorString, setErrorString] = useState<string>("Erreur lors de la réinitialisation du mot de passe")
+
   const handleSheetChanges = useCallback((index: number) => {
     if (index === -1) {
       onClose();
@@ -42,25 +60,43 @@ const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) =
 
   if (!visible) return null;
 
-    const handleFormSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
-      const baseURL: string | undefined = "http://localhost:3001";
-      if (!baseURL) {
-        throw new Error('No API URL');
-      }
-      try {
-        const response = await axios.post(`${baseURL}/users/resend_confirmation`, { email: values.email });
-        if (response.status === 200) {
-          setSubmitSucces(true)
-          setSubmitting(false);
-        } else {
-          setSubmitSucces(false);
-        }
-      } catch (error: any) {
+  const handleFormSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
+  const baseURL: string | undefined = "http://localhost:3001";
+    if (!baseURL) {
+      throw new Error('No API URL');
+    }
+    try {
+      const response = await axios.post(`${baseURL}/users/resend_confirmation`, { email: values.email });
+
+      if (response.status === 200) {
         setSubmitSucces(true);
-        setSubmitting(false);
+        Vibration.vibrate(successVibrationPattern);
+      } else {
+        setSubmitSucces(false);
+        Vibration.vibrate(failureVibrationPattern);
       }
+    } catch (error: any) {
+      setSubmitSucces(false);
+      if (error.response) {
+        const errorCode = error.response?.data?.error;
+        const errorMessage = getErrorMessage(errorCode);
+        Vibration.vibrate(failureVibrationPattern);
+
+        if (errorCode) {
+          setErrorString(errorMessage);
+        } else {
+          setErrorString(getErrorMessage("generic"));
+        }
+      } else {
+        setErrorString(getErrorMessage("generic"));
+        Vibration.vibrate(failureVibrationPattern);
+      }
+    } finally {
+      setSubmitting(false);
       setBeenSubmit(true);
-  };
+    }
+  }
+
 
   const closeHandle = () => {
     setBeenSubmit(false);
@@ -100,7 +136,7 @@ const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) =
         :
         (<View className='items-center'>
           <LottieView style={{height: 80, width: 80}} source={fail} autoPlay loop />
-          <Text className="my-3 text-sm text-dark-navy text-center">Echec de l'envoi, veuillez vérifier l'email indiqué !</Text>
+          <Text className="my-3 text-sm text-dark-navy text-center">{errorString}</Text>
           <TouchableOpacity
               className={`px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75 bg-darker-purple shadow-2xl w-5/6`}
               onPress={continueHandle}
@@ -148,7 +184,7 @@ const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) =
                 onPress={submitForm}
                 disabled={!isValid || isSubmitting}
               >
-                <Text style={{ color: 'white', textAlign: 'center', fontSize: 18 }}>Réinitialiser</Text>
+                <Text style={{ color: 'white', textAlign: 'center', fontSize: 18 }}>{isSubmitting ? "Envoi..." : "Réinitialiser"}</Text>
               </TouchableOpacity>
             </View>
           )}
