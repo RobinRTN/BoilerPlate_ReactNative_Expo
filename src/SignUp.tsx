@@ -81,9 +81,9 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
       }
       resetForm();
     } catch (error: any) {
-      console.error('Signup error:', error);
-      const errorCode = error.response?.data?.code || 'generic';
-      const errorMessage = getErrorMessage(errorCode);
+      console.error('Signup error:', error.response.data.status.message);
+      const errorCode = error.response.data.status.message || 'generic';
+      const errorMessage = getErrorMessage(errorCode.split(".")[2]);
       Toast.show({
         type: 'error',
         text1: 'Erreur',

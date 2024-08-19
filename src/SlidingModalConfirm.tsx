@@ -1,157 +1,203 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  Modal,
-  Animated,
-  View,
-  Text,
-  Dimensions,
-  PanResponder,
-  TextInput,
-  Keyboard,
-  KeyboardEvent,
-  TouchableOpacity
-} from 'react-native';
+import BottomSheet, {BottomSheetTextInput} from "@gorhom/bottom-sheet";
+import { useRef, useMemo, useCallback } from "react";
+import { View, Text, Vibration, TouchableOpacity, KeyboardAvoidingView, Platform, ViewComponent } from 'react-native';
+import { Formik, Field, ErrorMessage, FormikHelpers } from 'formik';
+import * as Yup from 'yup';
+import axios from "axios";
+import { useState } from "react";
+import LottieView from "lottie-react-native";
+import succes from '../assets/tick.json';
+import fail from '../assets/fail.json';
 
 interface ConfirmInterface {
   visible: boolean;
   onClose: () => void;
 }
 
-const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) => {
-  const slideAnim = useRef(new Animated.Value(Dimensions.get('window').height)).current;
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+const successVibrationPattern = [0, 200, 100, 200];
+const failureVibrationPattern = [0, 500];
 
-  const closeModal = () => {
-    Animated.timing(slideAnim, {
-      toValue: Dimensions.get('window').height,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => onClose());
+const getErrorMessage = (errorCode: string): string => {
+  const errors: Record<string, string> = {
+    "invalid_email": "Adresse email invalide",
+    "required": "Email requis",
+    "email_already_confirmed": "Adresse email déjà validée, vous pouvez vous connecter.",
+    "user_not_found": "Aucun utilisateur trouvé avec cet email.",
+    "generic": "Erreur lors de la demande."
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (event, gestureState) => {
-        if (gestureState.dy > 0) {
-          slideAnim.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (event, gestureState) => {
-        if (gestureState.dy > 100) {
-          closeModal();
-        } else {
-          Animated.timing(slideAnim, {
-            toValue: -keyboardHeight,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    })
-  ).current;
+  return errors[errorCode] || errors["generic"];
+};
 
-  useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener('keyboardWillShow', (event: KeyboardEvent) => {
-      const keyboardHeight = event.endCoordinates.height;
-      setKeyboardHeight(keyboardHeight);
-      Animated.timing(slideAnim, {
-        toValue: -keyboardHeight + 10,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    });
 
-    const keyboardWillHideListener = Keyboard.addListener('keyboardWillHide', (event: KeyboardEvent) => {
-      setKeyboardHeight(0);
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 10,
-        useNativeDriver: true,
-      }).start();
-    });
+const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) => {
 
-    return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
-    };
-  }, [slideAnim]);
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => ['40%', '50%'], []);
+  const [beenSubmit, setBeenSubmit] = useState<boolean>(false);
+  const [submitSucces, setSubmitSucces] = useState<boolean>(false);
+  const [errorString, setErrorString] = useState<string>("Erreur lors de la réinitialisation du mot de passe")
 
-  useEffect(() => {
-    if (visible) {
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(slideAnim, {
-        toValue: Dimensions.get('window').height,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+  const handleSheetChanges = useCallback((index: number) => {
+    if (index === -1) {
+      onClose();
     }
-  }, [visible]);
+  }, [onClose]);
+
+  const validationSchema = Yup.object().shape({
+    email: Yup.string()
+      .email('Email invalide')
+      .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Format d\'email invalide')
+      .required('Champ requis'),
+  });
+  const closeBottomSheet = () => {
+    bottomSheetRef.current?.close();
+  };
+
+  interface FormValues {
+    email: string;
+  }
+
+  if (!visible) return null;
+
+  const handleFormSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
+  const baseURL: string | undefined = "http://localhost:3001";
+    if (!baseURL) {
+      throw new Error('No API URL');
+    }
+    try {
+      const response = await axios.post(`${baseURL}/users/resend_confirmation`, { email: values.email });
+      if (response.status === 200) {
+        setSubmitSucces(true);
+        Vibration.vibrate(successVibrationPattern);
+      } else {
+        setSubmitSucces(false);
+        Vibration.vibrate(failureVibrationPattern);
+      }
+    } catch (error: any) {
+      setSubmitSucces(false);
+      if (error.response) {
+        const errorCode = error.response?.data?.error;
+        const errorMessage = getErrorMessage(errorCode);
+        Vibration.vibrate(failureVibrationPattern);
+
+        if (errorCode) {
+          setErrorString(errorMessage);
+        } else {
+          setErrorString(getErrorMessage("generic"));
+        }
+      } else {
+        setErrorString(getErrorMessage("generic"));
+        Vibration.vibrate(failureVibrationPattern);
+      }
+    } finally {
+      setSubmitting(false);
+      setBeenSubmit(true);
+    }
+  }
+
+
+  const closeHandle = () => {
+    setBeenSubmit(false);
+    setSubmitSucces(false);
+    closeBottomSheet();
+  }
+
+  const continueHandle = () => {
+    setBeenSubmit(false);
+    setSubmitSucces(false);
+  }
 
   return (
-    <Modal
-      transparent={true}
-      visible={visible}
-      animationType="none"
-      onRequestClose={closeModal}
-    >
-      <Animated.View
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          backgroundColor: 'white',
-          transform: [{ translateY: slideAnim }],
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-          padding: 16,
-        }}
-        {...panResponder.panHandlers}
-      >
-        <View
-          style={{
-            alignItems: 'center',
-            marginBottom: 10,
-          }}
-        >
-          <View
-            style={{
-              width: 40,
-              height: 5,
-              borderRadius: 2.5,
-              backgroundColor: '#ccc',
-            }}
-          />
+    <BottomSheet
+    ref={bottomSheetRef}
+    snapPoints={snapPoints}
+    onChange={handleSheetChanges}
+    enablePanDownToClose={true}
+  >
+      <Text className="my-3 text-xl text-dark-navy bold text-center">E-mail de confirmation non reçu ?</Text>
+
+      {beenSubmit ?
+      (
+        submitSucces ?
+        (<View className='items-center'>
+          <LottieView style={{height: 120, width: 120}} source={succes} autoPlay loop />
+          <Text className="my-3 text-sm text-dark-navy text-center">Email de confirmation envoyé avec succès !</Text>
+          <TouchableOpacity
+              className={`px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75 bg-darker-purple shadow-2xl w-5/6`}
+              onPress={closeHandle}
+            >
+              <Text style={{ color: 'white', textAlign: 'center', fontSize: 18 }}>Continuer</Text>
+            </TouchableOpacity>
+
         </View>
-        <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 }}>Sliding Modal</Text>
-        <Text>This is a sliding modal with drag-to-dismiss!</Text>
-        <TextInput
-          placeholder="Enter something"
-          style={{
-            height: 40,
-            borderColor: 'gray',
-            borderWidth: 1,
-            borderRadius: 5,
-            marginTop: 20,
-            paddingHorizontal: 10,
-          }}
-        />
-      </Animated.View>
-    </Modal>
+        )
+        :
+        (<View className='items-center'>
+          <LottieView style={{height: 80, width: 80}} source={fail} autoPlay loop />
+          <Text className="my-3 text-sm text-dark-navy text-center">{errorString}</Text>
+          <TouchableOpacity
+              className={`px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75 bg-darker-purple shadow-2xl w-5/6`}
+              onPress={continueHandle}
+            >
+            <Text style={{ color: 'white', textAlign: 'center', fontSize: 18 }}>Réessayer</Text>
+          </TouchableOpacity>
+      </View>)
+      )
+      : (
+        <View>
+          <Text className="my-3 text-sm text-dark-navy text-center mx-3">Pense à bien vérifier dans tes spams 📫</Text>
+          <Formik
+          initialValues={{ email: '' }}
+          validationSchema={validationSchema}
+          validateOnMount
+          onSubmit={handleFormSubmit}
+        >
+          {({ submitForm, isSubmitting, isValid, handleChange, handleBlur, values, errors, touched }) => (
+            <View className="mx-4">
+              <BottomSheetTextInput
+                placeholder="Email"
+                placeholderTextColor="#1c2432"
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                value={values.email}
+                autoCapitalize='none'
+                style={{
+                  height: 40,
+                  borderColor: 'white',
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  marginTop: 20,
+                  color: "#02012B",
+                  paddingHorizontal: 10,
+                  backgroundColor: 'lightgray',
+                  marginHorizontal: 7
+                }}
+              />
+              <View className="h-6 mx-2">
+                {touched.email && errors.email && (
+                  <Text className=" text-darker-purple mb-2">{errors.email}</Text>
+                )}
+              </View>
+              <TouchableOpacity
+                className={`px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75  ${isValid ? "bg-darker-purple shadow-2xl" : "bg-black-alternative-lighter shadow"}`}
+                onPress={submitForm}
+                disabled={!isValid || isSubmitting}
+              >
+                <Text style={{ color: 'white', textAlign: 'center', fontSize: 18 }}>{isSubmitting ? "Envoi..." : "Envoyer"}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          </Formik>
+        </View>
+      )
+      }
+
+
+    </BottomSheet>
   );
-};
+
+
+}
 
 export default SlidingModalConfirm;

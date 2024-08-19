@@ -60,10 +60,9 @@ const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
 
   const closeModalConfirm = () => setModalVisibleConfirm(false);
   const openModalConfirm = () => setModalVisibleConfirm(true);
+  const dispatch = useDispatch();
 
   const handleResponse = async (response: any) => {
-    const dispatch = useDispatch();
-
     const authHeader = response.headers.authorization;
     let token = null;
     if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -71,7 +70,6 @@ const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
     }
 
     const { id, email, username, picture_number } = response.data.status.data.user;
-
     dispatch(setAuthState({
       accessToken: token,
       userId: id,

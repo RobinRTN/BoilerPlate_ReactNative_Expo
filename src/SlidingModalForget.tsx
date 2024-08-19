@@ -9,7 +9,7 @@ import LottieView from "lottie-react-native";
 import succes from '../assets/tick.json';
 import fail from '../assets/fail.json';
 
-interface ConfirmInterface {
+interface ForgetInterface {
   visible: boolean;
   onClose: () => void;
 }
@@ -21,16 +21,17 @@ const getErrorMessage = (errorCode: string): string => {
   const errors: Record<string, string> = {
     "invalid_email": "Adresse email invalide",
     "required": "Email requis",
-    "email_already_confirmed": "Adresse email déjà validée, vous pouvez vous connecter.",
-    "user_not_found": "Aucun utilisateur trouvé avec cet email.",
-    "generic": "Erreur lors de la demande."
+    "generic": "Erreur lors de la demande.",
+    "account_not_found": "Aucun compte associé à cet email n’a été trouvé.",
+    "not_allowed_for_google": "La réinitialisation du mot de passe n'est pas autorisée pour les comptes créés via Google.",
+    "not_allowed_for_facebook": "La réinitialisation du mot de passe n'est pas autorisée pour les comptes créés via Facebook."
   };
 
   return errors[errorCode] || errors["generic"];
 };
 
 
-const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) => {
+const SlidingModalForget: React.FC<ForgetInterface> = ({ visible, onClose }) => {
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['40%', '50%'], []);
@@ -66,8 +67,7 @@ const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) =
       throw new Error('No API URL');
     }
     try {
-      const response = await axios.post(`${baseURL}/users/resend_confirmation`, { email: values.email });
-
+      const response = await axios.post(`${baseURL}/password`, { email: values.email });
       if (response.status === 200) {
         setSubmitSucces(true);
         Vibration.vibrate(successVibrationPattern);
@@ -162,6 +162,7 @@ const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) =
                 onChangeText={handleChange('email')}
                 onBlur={handleBlur('email')}
                 value={values.email}
+                autoCapitalize='none'
                 style={{
                   height: 40,
                   borderColor: 'white',
@@ -200,4 +201,4 @@ const SlidingModalConfirm: React.FC<ConfirmInterface> = ({ visible, onClose }) =
 
 }
 
-export default SlidingModalConfirm;
+export default SlidingModalForget;
