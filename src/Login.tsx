@@ -7,8 +7,22 @@ import SlidingModalConfirm from "./SlidingModalConfirm";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { setAuthState } from "./features/authSlice";
+import Toast from 'react-native-toast-message';
 
+const getLoginErrorMessage = (errorCode: string): string => {
+  const errors: Record<string, string> = {
+    "invalidEmail": "Adresse email invalide",
+    "invalidFormat": "Format de l'email invalide",
+    "required": "Champs requis",
+    "unconfirmed": "Votre compte n'est pas encore confirmé. Veuillez vérifier votre e-mail pour le lien de confirmation (vérifiez vos spams).",
+    "invalid_login": "Échec de la connexion. Veuillez vérifier vos identifiants.",
+    "invalid_password": "Mot de passe incorrect. Veuillez réessayer.",
+    "locked": "Votre compte est verrouillé en raison de trop nombreuses tentatives de connexion. Veuillez réessayer plus tard.",
+    "generic": "Une erreur s’est produite. Veuillez réessayer."
+  };
 
+  return errors[errorCode] || errors["generic"];
+};
 
 
 const SignUpSchema = Yup.object().shape({
@@ -88,7 +102,17 @@ const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
         handleResponse(response);
       }
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Signup error:', error.response.data.status.message);
+
+      const errorCode = error.response.data.status.message || 'generic';
+
+      const errorMessage = getLoginErrorMessage(errorCode);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Erreur',
+        text2: errorMessage,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -170,6 +194,7 @@ const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
       </SafeAreaView>
       <SlidingModalForget visible ={modalVisibleForget} onClose={closeModalForget} />
       <SlidingModalConfirm visible ={modalVisibleConfirm} onClose={closeModalConfirm} />
+      <Toast />
     </KeyboardAvoidingView>
   )
 }

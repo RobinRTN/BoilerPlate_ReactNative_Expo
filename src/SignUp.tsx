@@ -6,6 +6,7 @@ import { useState } from "react";
 import SlidingModalSuccess from "./SlidingModalSuccess";
 import LottieView from 'lottie-react-native';
 import succes from "../assets/tick.json"
+import Toast from 'react-native-toast-message';
 
 
 const SignUpSchema = Yup.object().shape({
@@ -37,6 +38,21 @@ interface LoginInterface {
   setIsSignUp: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+const getErrorMessage = (errorCode: string): string => {
+  const errors: Record<string, string> = {
+    "invalid_email": "Adresse email invalide",
+    "invalid_email_format": "Format de l'email invalide",
+    "required": "Champs requis",
+    "password_min": "Le mot de passe doit comporter au moins 6 caractères.",
+    "password_match": "Les mots de passe doivent correspondre",
+    "email_taken": "L'email a déjà été pris.",
+    "generic": "Une erreur s’est produite. Veuillez réessayer."
+  };
+
+  return errors[errorCode] || errors["generic"];
+};
+
+
 const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
 
   const [modalVisibleSuccess, setModalVisibleSuccess] = useState<boolean>(false);
@@ -66,6 +82,13 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
       resetForm();
     } catch (error: any) {
       console.error('Signup error:', error);
+      const errorCode = error.response?.data?.code || 'generic';
+      const errorMessage = getErrorMessage(errorCode);
+      Toast.show({
+        type: 'error',
+        text1: 'Erreur',
+        text2: errorMessage,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -156,6 +179,7 @@ const SignUp: React.FC<LoginInterface> = ({setIsSignUp}) => {
         </View>
       </SafeAreaView>
       <SlidingModalSuccess visible ={modalVisibleSuccess} onClose={closeModalSuccess} setIsSignUp={setIsSignUp} />
+      <Toast />
     </KeyboardAvoidingView>
   )
 }
