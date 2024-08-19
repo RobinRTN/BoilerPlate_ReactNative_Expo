@@ -97,7 +97,7 @@ const Login: React.FC<LoginInterface> = ({setIsSignUp}) => {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0} // Offset for iOS to push content above keyboard
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0} 
     >
       <SafeAreaView className="flex-1 justify-center">
         <View>

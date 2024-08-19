@@ -22,7 +22,7 @@ const SignUpSchema = Yup.object().shape({
 
 const handlePress = (handleSubmit: () => void) => (event: GestureResponderEvent) => {
   event.preventDefault();
-  handleSubmit();``
+  handleSubmit();
 };
 
 interface SignUpFormValues {
