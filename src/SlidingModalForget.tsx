@@ -18,6 +18,7 @@ const successVibrationPattern = [0, 200, 100, 200];
 const failureVibrationPattern = [0, 500];
 
 const getErrorMessage = (errorCode: string): string => {
+  console.log(errorCode);
   const errors: Record<string, string> = {
     "invalid_email": "Adresse email invalide",
     "required": "Email requis",
@@ -27,7 +28,7 @@ const getErrorMessage = (errorCode: string): string => {
     "not_allowed_for_facebook": "La réinitialisation du mot de passe n'est pas autorisée pour les comptes créés via Facebook."
   };
 
-  return errors[errorCode] || errors["generic"];
+  return errors[errorCode.split(".")[1]] || errors["generic"];
 };
 
 
@@ -135,7 +136,7 @@ const SlidingModalForget: React.FC<ForgetInterface> = ({ visible, onClose }) => 
         )
         :
         (<View className='items-center'>
-          <LottieView style={{height: 80, width: 80}} source={fail} autoPlay loop />
+          <LottieView style={{height: 80, width: 80}} source={fail} autoPlay />
           <Text className="my-3 text-sm text-dark-navy text-center">{errorString}</Text>
           <TouchableOpacity
               className={`px-4 py-2 rounded mx-2 mt-4 transition ease-in-out duration-75 bg-darker-purple shadow-2xl w-5/6`}
