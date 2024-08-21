@@ -23,6 +23,7 @@ const InnerApp: React.FC = () => {
           screenOptions={{
             headerShown: false,
             headerLeft: () => null,
+            animationEnabled: false,
           }}
         >
         { accessToken ?

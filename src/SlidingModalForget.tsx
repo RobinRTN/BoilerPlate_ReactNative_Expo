@@ -7,7 +7,7 @@ import axios from "axios";
 import { useState } from "react";
 import LottieView from "lottie-react-native";
 import succes from '../assets/tick.json';
-import fail from '../assets/fail.json';
+import fail from '../assets/fail2.json';
 
 interface ForgetInterface {
   visible: boolean;

@@ -16,7 +16,6 @@ const AppNavigator: React.FC = () => {
     <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
-      // Define the icons for each route
       tabBarIcon: ({ focused, color, size }) => {
         let iconName: string = '';
 
